@@ -98,7 +98,6 @@ export function MainApp(): ReactElement {
 
 	const handleGrid = (entryPoints: Entry): void => {
 		if (!grid[entryPoints.x][entryPoints.y]) {
-			toast.dismiss();
 			if (currentPlay === 'X') {
 				!isPlayer ? toast.info(COMPUTER) : toast.info(PLAYER2);
 			} else {
@@ -119,6 +118,7 @@ export function MainApp(): ReactElement {
 	};
 
 	const handleReset = () => {
+		toast.dismiss();
 		setIsGameStarted(false);
 		setButtonData(initialButtonState);
 		setCurrentPlay('X');
