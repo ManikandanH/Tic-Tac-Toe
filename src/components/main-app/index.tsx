@@ -1,14 +1,16 @@
-import { ReactElement, useEffect, useState } from 'react';
+import { Fragment, ReactElement, useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-import { Opponent } from '../../types';
-import { gridInitialState, ROWS, COLS, PLAYER2, PLAYER1, COMPUTER } from '../../constants';
+import { Grid, Opponent, PlayType } from '../../types';
+import { gridInitialState, ROWS, COLS } from '../../constants';
 
 import { Controls } from '../controls';
 import { GameGrid } from '../game-grid';
 import { ErrorComponent } from '../error';
+import { checkGameWinnerForPlayers } from '../../utils';
+import { PlayerControls } from '../player-controls';
 
 const Container = styled.div`
 	text-align: center;
@@ -41,7 +43,28 @@ const GameResetButton = styled.button`
 	}
 `;
 
-export type PlayType = 'X' | 'O';
+const GameExitButton = styled.button`
+	background-color: transparent;
+	color: black;
+	width: 120px;
+	height: 30px;
+	outline: none;
+	margin: 10px;
+	border-color: black;
+	border-bottom: 3px solid #ff3535;
+	border-right: 3px solid black;
+	border-left: 3px solid black;
+	border-top: 3px solid #ff3535;
+
+	&:hover {
+		width: 130px;
+		height: 35px;
+		border-top: 3px solid black;
+		border-left: 3px solid #ff3535;
+		border-bottom: 3px solid black;
+		border-right: 3px solid #ff3535;
+	}
+`;
 
 export interface Entry {
 	x: number;
@@ -54,8 +77,6 @@ export interface ButtonData {
 	opponentType: Opponent;
 	disabled: boolean;
 }
-
-export type Grid = Array<Array<any>>;
 
 export function MainApp(): ReactElement {
 	const initialButtonState: ButtonData[] = [
@@ -75,12 +96,20 @@ export function MainApp(): ReactElement {
 	const [buttonData, setButtonData] = useState<ButtonData[]>(initialButtonState);
 	const [grid, setGrid] = useState<Grid>([]);
 	const [isGameStarted, setIsGameStarted] = useState(false);
-	const [currentPlay, setCurrentPlay] = useState<PlayType>();
+	const [currentPlay, setCurrentPlay] = useState<PlayType>('X');
 	const [isPlayer, setIsPlayer] = useState<boolean | null>(null);
+	const [isGameComplete, setIsGameComplete] = useState<boolean>(false);
+	const [player1Name, setPlayer1Name] = useState<string>();
+	const [player2Name, setPlayer2Name] = useState<string>();
 
 	useEffect(() => {
 		setGrid(gridInitialState);
 	}, []);
+
+	const handlePlayersNameCallback = (player1Name: string, player2Name: string) => {
+		setPlayer1Name(player1Name);
+		setPlayer2Name(player2Name);
+	};
 
 	const isPlayerHandler = (opponent: Opponent): void => {
 		setIsPlayer(() => (opponent === 'player' ? true : false));
@@ -93,51 +122,97 @@ export function MainApp(): ReactElement {
 		});
 		setIsGameStarted(!isGameStarted);
 		setCurrentPlay('X');
-		opponent === 'computer' ? toast.info(COMPUTER) : toast.info(PLAYER1);
 	};
 
 	const handleGrid = (entryPoints: Entry): void => {
-		if (!grid[entryPoints.x][entryPoints.y]) {
-			if (currentPlay === 'X') {
-				!isPlayer ? toast.info(COMPUTER) : toast.info(PLAYER2);
-			} else {
-				toast.info(PLAYER1);
-			}
-			setGrid((prevState) =>
-				prevState.map((rows, i) =>
-					rows.map((cols, j) => {
-						if (i === entryPoints.x && j === entryPoints.y) {
-							return currentPlay;
-						}
-						return cols;
-					})
-				)
+		if (!grid[entryPoints.x][entryPoints.y] && !isGameComplete) {
+			const cloneGrid = [...grid].map((rows, i) =>
+				rows.map((cols, j) => {
+					if (i === entryPoints.x && j === entryPoints.y) {
+						return currentPlay;
+					}
+					return cols;
+				})
 			);
-			setCurrentPlay((prevState) => (prevState === 'O' ? 'X' : 'O'));
+
+			if (isPlayer) {
+				const { isCol, isRow, isWin, index } = checkGameWinnerForPlayers(
+					currentPlay,
+					cloneGrid,
+					entryPoints.x,
+					entryPoints.y
+				);
+				if (isWin) {
+					setGrid((prevState) =>
+						prevState.map((rows, i) =>
+							rows.map((cols, j) => {
+								if (isRow && i === index) {
+									return currentPlay;
+								} else {
+									if (isCol && j === index) {
+										return currentPlay;
+									}
+									return false;
+								}
+							})
+						)
+					);
+					toast.success(
+						currentPlay === 'X'
+							? `${player1Name} won the match`
+							: `${player2Name} won the match`
+					);
+					setIsGameComplete(true);
+				} else {
+					setGrid(cloneGrid);
+					setCurrentPlay((prevState) => (prevState === 'O' ? 'X' : 'O'));
+				}
+			}
 		}
 	};
 
 	const handleReset = () => {
 		toast.dismiss();
-		setIsGameStarted(false);
-		setButtonData(initialButtonState);
 		setCurrentPlay('X');
 		setGrid(gridInitialState);
+		setIsGameComplete(false);
+	};
+
+	const handleExit = () => {
+		toast.dismiss();
+		setCurrentPlay('X');
+		setIsGameStarted(false);
+		setIsPlayer(false);
+		setPlayer2Name('');
+		setPlayer1Name('');
+		setButtonData(initialButtonState);
+		setGrid(gridInitialState);
+		setIsGameComplete(false);
 	};
 
 	return (
 		<Container>
 			<Controls buttonData={buttonData} isPlayerHandler={isPlayerHandler} />
-			{isGameStarted && isPlayer && (
+			{isGameStarted && (
 				<GameContainer>
-					<GameGrid handleGrid={handleGrid} grid={grid} rows={ROWS} cols={COLS} />
-					<GameResetButton onClick={handleReset}>Reset Game</GameResetButton>
-				</GameContainer>
-			)}
-			{isGameStarted && !isPlayer && (
-				<GameContainer>
-					<ErrorComponent errorMessage="Feature Not developed Yet" />
-					<GameResetButton onClick={handleReset}>Exit</GameResetButton>
+					{isPlayer ? (
+						<Fragment>
+							<PlayerControls playerNamesCallback={handlePlayersNameCallback} />
+							<GameGrid
+								isGameComplete={isGameComplete}
+								handleGrid={handleGrid}
+								grid={grid}
+								rows={ROWS}
+								cols={COLS}
+							/>
+						</Fragment>
+					) : (
+						<ErrorComponent errorMessage="Feature Not developed Yet" />
+					)}
+					{isPlayer && (
+						<GameResetButton onClick={handleReset}>Reset Game</GameResetButton>
+					)}
+					<GameExitButton onClick={handleExit}>Exit</GameExitButton>
 				</GameContainer>
 			)}
 			<ToastContainer
