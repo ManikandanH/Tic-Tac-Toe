@@ -136,27 +136,39 @@ export function MainApp(): ReactElement {
 			);
 
 			if (isPlayer) {
-				const { isCol, isRow, isWin, index } = checkGameWinnerForPlayers(
-					currentPlay,
-					cloneGrid,
-					entryPoints.x,
-					entryPoints.y
-				);
+				const { isCol, isRow, isWin, index, isDiagonal, diagonalType } =
+					checkGameWinnerForPlayers(currentPlay, cloneGrid, entryPoints.x, entryPoints.y);
+
 				if (isWin) {
-					setGrid((prevState) =>
-						prevState.map((rows, i) =>
-							rows.map((cols, j) => {
-								if (isRow && i === index) {
-									return currentPlay;
-								} else {
+					if (isDiagonal) {
+						setGrid((prevState) =>
+							prevState.map((rows, i) =>
+								rows.map((cols, j) => {
+									if (diagonalType === 'Main' && i === j) {
+										return currentPlay;
+									}
+									if (diagonalType === 'Secondary' && i + j === grid.length - 1) {
+										return currentPlay;
+									}
+									return false;
+								})
+							)
+						);
+					} else {
+						setGrid((prevState) =>
+							prevState.map((rows, i) =>
+								rows.map((cols, j) => {
+									if (isRow && i === index) {
+										return currentPlay;
+									}
 									if (isCol && j === index) {
 										return currentPlay;
 									}
 									return false;
-								}
-							})
-						)
-					);
+								})
+							)
+						);
+					}
 					toast.success(
 						currentPlay === 'X'
 							? `${player1Name} won the match`

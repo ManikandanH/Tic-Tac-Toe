@@ -26,9 +26,9 @@ export function PlayerControls({
 }: {
 	playerNamesCallback: (player1Name: string, player2Name: string) => void;
 }) {
-	const [player1Name, setPlayer1Name] = useState<string>('');
-	const [player2Name, setPlayer2Name] = useState<string>('');
-	const [isConfirmed, setIsConfirmed] = useState<boolean>(false);
+	const [player1Name, setPlayer1Name] = useState<string>('Player 1');
+	const [player2Name, setPlayer2Name] = useState<string>('Player 2');
+	const [isConfirmed, setIsConfirmed] = useState<boolean>(true);
 
 	const handleChange = (e: any, type: string): void => {
 		if (type === 'player1') {
