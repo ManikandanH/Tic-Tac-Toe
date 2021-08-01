@@ -1,8 +1,7 @@
 import { ReactElement } from 'react';
 import styled from '@emotion/styled';
 
-import { Entry } from '../main-app';
-import { Grid } from '../../types';
+import { Entry, Grid } from '../../types';
 
 const GridContainer = styled.div`
 	display: grid;

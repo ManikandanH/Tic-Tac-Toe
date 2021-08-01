@@ -1,4 +1,4 @@
-import { PlayType, Grid, DiagonalGridType } from '../types';
+import { PlayType, Grid, DiagonalGridType, Entry } from '../types';
 
 const checkGameWinnerInGrid = (
 	currentPlayer: PlayType,
@@ -202,4 +202,222 @@ export const checkGameWinnerForPlayers = (
 		isDiagonal: false,
 		diagonalType: null,
 	};
+};
+
+const checkGameWinnerInGridComputer = (
+	currentPlayer: PlayType,
+	gridRow: Array<any>,
+	gridCol: Array<any>,
+	gridDiagonal?: {
+		diagonalGrid: Grid;
+		diagonalType: DiagonalGridType | null;
+	}
+): Entry => {
+	let gridRowIndex: number = -1;
+	let gridColIndex: number = -1;
+
+	const gridRowCheck = gridRow.filter((rows, index) => {
+		if (rows === false) {
+			return true;
+		} else {
+			gridRowIndex = index;
+			return false;
+		}
+	});
+	const gridColCheck = gridCol.filter((cols, index) => {
+		if (cols === false) {
+			return true;
+		} else {
+			gridColIndex = index;
+			return false;
+		}
+	});
+
+	if (gridRowCheck.length > 1 && gridColCheck.length > 1) {
+		return {
+			x: -1,
+			y: -1,
+		};
+	} else {
+		return {
+			x: gridRowIndex,
+			y: gridColIndex,
+		};
+	}
+	// if (gridRowCheck) {
+	// 	return {
+	// 		isWin: true,
+	// 		isRow: true,
+	// 		isCol: false,
+	// 		isDiagonal: false,
+	// 		isDiagonalType: null,
+	// 	};
+	// } else if (gridColCheck) {
+	// 	return {
+	// 		isWin: true,
+	// 		isRow: false,
+	// 		isCol: true,
+	// 		isDiagonal: false,
+	// 		isDiagonalType: null,
+	// 	};
+	// }
+	// if (gridDiagonal?.diagonalGrid && gridDiagonal.diagonalGrid.length > 0) {
+	// 	if (gridDiagonal.diagonalGrid.length === 1) {
+	// 		const isDiagonalGridCheck =
+	// 			gridDiagonal.diagonalGrid[0].filter((dia) => dia !== currentPlayer).length === 0;
+
+	// 		return {
+	// 			isWin: isDiagonalGridCheck,
+	// 			isRow: false,
+	// 			isCol: false,
+	// 			isDiagonal: isDiagonalGridCheck,
+	// 			isDiagonalType: gridDiagonal.diagonalType,
+	// 		};
+	// 	} else {
+	// 		const isMainDiagonalCheck =
+	// 			gridDiagonal.diagonalGrid[0].filter((dia) => dia !== currentPlayer).length === 0;
+	// 		const isSecondaryDiagonalCheck =
+	// 			gridDiagonal.diagonalGrid[1].filter((dia) => dia !== currentPlayer).length === 0;
+
+	// 		if (isMainDiagonalCheck) {
+	// 			return {
+	// 				isWin: false,
+	// 				isRow: false,
+	// 				isCol: false,
+	// 				isDiagonal: isMainDiagonalCheck,
+	// 				isDiagonalType: 'Main',
+	// 			};
+	// 		} else if (isSecondaryDiagonalCheck) {
+	// 			return {
+	// 				isWin: false,
+	// 				isRow: false,
+	// 				isCol: false,
+	// 				isDiagonal: isSecondaryDiagonalCheck,
+	// 				isDiagonalType: 'Secondary',
+	// 			};
+	// 		}
+
+	// 		return {
+	// 			isWin: false,
+	// 			isRow: false,
+	// 			isCol: false,
+	// 			isDiagonal: false,
+	// 			isDiagonalType: null,
+	// 		};
+	// 	}
+	// }
+};
+
+const some = (
+	grid: Grid,
+	rowIndex: number,
+	colIndex: number,
+	type: 'Row' | 'Col',
+	startIndex: number,
+	currentPlay: PlayType
+) => {
+	let initialIndex = -1;
+	const arr: Entry[] = [];
+
+	if (type === 'Row') {
+		while (initialIndex !== startIndex) {
+			initialIndex = (rowIndex + 1) % grid.length;
+			if (grid[initialIndex][colIndex] !== currentPlay) {
+				arr.push({
+					x: initialIndex,
+					y: colIndex,
+				});
+			}
+			rowIndex++;
+		}
+	} else {
+		while (initialIndex !== startIndex) {
+			initialIndex = (colIndex + 1) % grid.length;
+			if (grid[rowIndex][initialIndex] !== currentPlay) {
+				arr.push({
+					x: rowIndex,
+					y: initialIndex,
+				});
+			}
+			colIndex++;
+		}
+	}
+
+	return arr;
+};
+
+export const computerGameChecker = (
+	grid: Grid,
+	currentPlay: PlayType,
+	currentPlayEntry: Entry
+): Entry => {
+	const entries: Entry = {
+		x: -1,
+		y: -1,
+	};
+
+	console.log(grid);
+	console.log(currentPlayEntry);
+	const sRow = some(
+		grid,
+		currentPlayEntry.x,
+		currentPlayEntry.y,
+		'Row',
+		currentPlayEntry.x,
+		currentPlay
+	);
+	const sCol = some(
+		grid,
+		currentPlayEntry.x,
+		currentPlayEntry.y,
+		'Col',
+		currentPlayEntry.y,
+		currentPlay
+	);
+
+	// console.log(sRow, sCol, '====');
+	if (sRow.length === 1) {
+		return {
+			x: sRow[0].x,
+			y: sRow[0].y,
+		};
+	} else if (sCol.length === 1) {
+		return {
+			x: sCol[0].x,
+			y: sCol[0].y,
+		};
+	}
+
+	return entries;
+};
+
+export const computerGenerateEntries = (
+	grid: Grid,
+	currentPlay: PlayType,
+	currentPlayEntry: Entry
+): Entry => {
+	const entries: Entry = {
+		x: 0,
+		y: 0,
+	};
+	while (true) {
+		const { x, y } = computerGameChecker(
+			grid,
+			currentPlay === 'X' ? 'O' : 'X',
+			currentPlayEntry
+		);
+		if (x === -1 && y === -1) {
+			entries.x = Math.floor(Math.random() * 3);
+			entries.y = Math.floor(Math.random() * 3);
+			if (!grid[entries.x][entries.y]) {
+				break;
+			}
+		} else {
+			entries.x = x;
+			entries.y = y;
+			break;
+		}
+	}
+
+	return entries;
 };

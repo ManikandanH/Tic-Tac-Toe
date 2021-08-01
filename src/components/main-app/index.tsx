@@ -1,15 +1,15 @@
-import { Fragment, ReactElement, useEffect, useState } from 'react';
+import { ReactElement, useEffect, useRef, useState } from 'react';
 import styled from '@emotion/styled';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-import { Grid, Opponent, PlayType } from '../../types';
+import { Entry, Grid, Opponent, PlayType } from '../../types';
 import { gridInitialState, ROWS, COLS } from '../../constants';
 
 import { Controls } from '../controls';
 import { GameGrid } from '../game-grid';
-import { ErrorComponent } from '../error';
-import { checkGameWinnerForPlayers } from '../../utils';
+// import { ErrorComponent } from '../error';
+import { checkGameWinnerForPlayers, computerGenerateEntries } from '../../utils';
 import { PlayerControls } from '../player-controls';
 
 const Container = styled.div`
@@ -66,11 +66,6 @@ const GameExitButton = styled.button`
 	}
 `;
 
-export interface Entry {
-	x: number;
-	y: number;
-}
-
 export interface ButtonData {
 	buttonText: string;
 	isSelected: boolean;
@@ -95,12 +90,14 @@ export function MainApp(): ReactElement {
 	];
 	const [buttonData, setButtonData] = useState<ButtonData[]>(initialButtonState);
 	const [grid, setGrid] = useState<Grid>([]);
-	const [isGameStarted, setIsGameStarted] = useState(false);
+	const [isGameGridLoaded, setIsGameGridLoaded] = useState(false);
 	const [currentPlay, setCurrentPlay] = useState<PlayType>('X');
 	const [isPlayer, setIsPlayer] = useState<boolean | null>(null);
 	const [isGameComplete, setIsGameComplete] = useState<boolean>(false);
 	const [player1Name, setPlayer1Name] = useState<string>();
 	const [player2Name, setPlayer2Name] = useState<string>();
+	const [isGameStarted, setIsGameStarted] = useState<boolean>(false);
+	const [entry, setEntries] = useState<Entry>({ x: -1, y: -1 });
 
 	useEffect(() => {
 		setGrid(gridInitialState);
@@ -112,7 +109,12 @@ export function MainApp(): ReactElement {
 	};
 
 	const isPlayerHandler = (opponent: Opponent): void => {
-		setIsPlayer(() => (opponent === 'player' ? true : false));
+		if (opponent === 'player') {
+			setIsPlayer(true);
+		} else {
+			setIsPlayer(false);
+		}
+		setIsGameGridLoaded(true);
 		setButtonData((prevState) => {
 			return prevState.map((btns) =>
 				btns.opponentType === opponent
@@ -120,8 +122,21 @@ export function MainApp(): ReactElement {
 					: { ...btns, disabled: !btns.disabled }
 			);
 		});
-		setIsGameStarted(!isGameStarted);
-		setCurrentPlay('X');
+	};
+
+	const computerIsPlaying = (grid: Grid, currentPlay: PlayType, currentEntries: Entry) => {
+		const { x, y }: Entry = computerGenerateEntries(grid, currentPlay, currentEntries);
+		const cloneGrid = [...grid].map((rows, i) =>
+			rows.map((cols, j) => {
+				if (i === x && j === y) {
+					return currentPlay;
+				}
+				return cols;
+			})
+		);
+
+		setGrid(cloneGrid);
+		setCurrentPlay(currentPlay === 'X' ? 'O' : 'X');
 	};
 
 	const handleGrid = (entryPoints: Entry): void => {
@@ -179,7 +194,14 @@ export function MainApp(): ReactElement {
 					setGrid(cloneGrid);
 					setCurrentPlay((prevState) => (prevState === 'O' ? 'X' : 'O'));
 				}
+			} else {
+				setGrid(cloneGrid);
+				setCurrentPlay((prevState) => (prevState === 'O' ? 'X' : 'O'));
+				setTimeout(() => {
+					computerIsPlaying(cloneGrid, currentPlay === 'X' ? 'O' : 'X', entryPoints);
+				}, 500);
 			}
+			setEntries(entryPoints);
 		}
 	};
 
@@ -188,12 +210,13 @@ export function MainApp(): ReactElement {
 		setCurrentPlay('X');
 		setGrid(gridInitialState);
 		setIsGameComplete(false);
+		setIsGameStarted(false);
 	};
 
 	const handleExit = () => {
 		toast.dismiss();
 		setCurrentPlay('X');
-		setIsGameStarted(false);
+		setIsGameGridLoaded(false);
 		setIsPlayer(false);
 		setPlayer2Name('');
 		setPlayer1Name('');
@@ -202,28 +225,34 @@ export function MainApp(): ReactElement {
 		setIsGameComplete(false);
 	};
 
+	const handleComputerGameStarted = (player1Name: string, player2Name: string) => {
+		setPlayer1Name(player1Name);
+		setPlayer2Name(player2Name);
+		setIsGameStarted(true);
+		if (player1Name === 'Computer') {
+			computerIsPlaying(grid, 'X', entry);
+		}
+	};
+
 	return (
 		<Container>
 			<Controls buttonData={buttonData} isPlayerHandler={isPlayerHandler} />
-			{isGameStarted && (
+			{isGameGridLoaded && (
 				<GameContainer>
-					{isPlayer ? (
-						<Fragment>
-							<PlayerControls playerNamesCallback={handlePlayersNameCallback} />
-							<GameGrid
-								isGameComplete={isGameComplete}
-								handleGrid={handleGrid}
-								grid={grid}
-								rows={ROWS}
-								cols={COLS}
-							/>
-						</Fragment>
-					) : (
-						<ErrorComponent errorMessage="Feature Not developed Yet" />
-					)}
-					{isPlayer && (
-						<GameResetButton onClick={handleReset}>Reset Game</GameResetButton>
-					)}
+					<PlayerControls
+						handleComputerGameStarted={handleComputerGameStarted}
+						isPlayer={isPlayer}
+						isGameStarted={isGameStarted}
+						playerNamesCallback={handlePlayersNameCallback}
+					/>
+					<GameGrid
+						isGameComplete={isGameComplete}
+						handleGrid={handleGrid}
+						grid={grid}
+						rows={ROWS}
+						cols={COLS}
+					/>
+					<GameResetButton onClick={handleReset}>Reset Game</GameResetButton>
 					<GameExitButton onClick={handleExit}>Exit</GameExitButton>
 				</GameContainer>
 			)}
