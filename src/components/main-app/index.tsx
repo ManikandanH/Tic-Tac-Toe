@@ -1,4 +1,4 @@
-import { ReactElement, useEffect, useRef, useState } from 'react';
+import { ReactElement, useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -8,7 +8,6 @@ import { gridInitialState, ROWS, COLS } from '../../constants';
 
 import { Controls } from '../controls';
 import { GameGrid } from '../game-grid';
-// import { ErrorComponent } from '../error';
 import { checkGameWinnerForPlayers, computerGenerateEntries } from '../../utils';
 import { PlayerControls } from '../player-controls';
 

@@ -204,109 +204,6 @@ export const checkGameWinnerForPlayers = (
 	};
 };
 
-const checkGameWinnerInGridComputer = (
-	currentPlayer: PlayType,
-	gridRow: Array<any>,
-	gridCol: Array<any>,
-	gridDiagonal?: {
-		diagonalGrid: Grid;
-		diagonalType: DiagonalGridType | null;
-	}
-): Entry => {
-	let gridRowIndex: number = -1;
-	let gridColIndex: number = -1;
-
-	const gridRowCheck = gridRow.filter((rows, index) => {
-		if (rows === false) {
-			return true;
-		} else {
-			gridRowIndex = index;
-			return false;
-		}
-	});
-	const gridColCheck = gridCol.filter((cols, index) => {
-		if (cols === false) {
-			return true;
-		} else {
-			gridColIndex = index;
-			return false;
-		}
-	});
-
-	if (gridRowCheck.length > 1 && gridColCheck.length > 1) {
-		return {
-			x: -1,
-			y: -1,
-		};
-	} else {
-		return {
-			x: gridRowIndex,
-			y: gridColIndex,
-		};
-	}
-	// if (gridRowCheck) {
-	// 	return {
-	// 		isWin: true,
-	// 		isRow: true,
-	// 		isCol: false,
-	// 		isDiagonal: false,
-	// 		isDiagonalType: null,
-	// 	};
-	// } else if (gridColCheck) {
-	// 	return {
-	// 		isWin: true,
-	// 		isRow: false,
-	// 		isCol: true,
-	// 		isDiagonal: false,
-	// 		isDiagonalType: null,
-	// 	};
-	// }
-	// if (gridDiagonal?.diagonalGrid && gridDiagonal.diagonalGrid.length > 0) {
-	// 	if (gridDiagonal.diagonalGrid.length === 1) {
-	// 		const isDiagonalGridCheck =
-	// 			gridDiagonal.diagonalGrid[0].filter((dia) => dia !== currentPlayer).length === 0;
-
-	// 		return {
-	// 			isWin: isDiagonalGridCheck,
-	// 			isRow: false,
-	// 			isCol: false,
-	// 			isDiagonal: isDiagonalGridCheck,
-	// 			isDiagonalType: gridDiagonal.diagonalType,
-	// 		};
-	// 	} else {
-	// 		const isMainDiagonalCheck =
-	// 			gridDiagonal.diagonalGrid[0].filter((dia) => dia !== currentPlayer).length === 0;
-	// 		const isSecondaryDiagonalCheck =
-	// 			gridDiagonal.diagonalGrid[1].filter((dia) => dia !== currentPlayer).length === 0;
-
-	// 		if (isMainDiagonalCheck) {
-	// 			return {
-	// 				isWin: false,
-	// 				isRow: false,
-	// 				isCol: false,
-	// 				isDiagonal: isMainDiagonalCheck,
-	// 				isDiagonalType: 'Main',
-	// 			};
-	// 		} else if (isSecondaryDiagonalCheck) {
-	// 			return {
-	// 				isWin: false,
-	// 				isRow: false,
-	// 				isCol: false,
-	// 				isDiagonal: isSecondaryDiagonalCheck,
-	// 				isDiagonalType: 'Secondary',
-	// 			};
-	// 		}
-
-	// 		return {
-	// 			isWin: false,
-	// 			isRow: false,
-	// 			isCol: false,
-	// 			isDiagonal: false,
-	// 			isDiagonalType: null,
-	// 		};
-	// 	}
-	// }
-};
 
 const some = (
 	grid: Grid,
@@ -356,8 +253,6 @@ export const computerGameChecker = (
 		y: -1,
 	};
 
-	console.log(grid);
-	console.log(currentPlayEntry);
 	const sRow = some(
 		grid,
 		currentPlayEntry.x,
@@ -375,7 +270,6 @@ export const computerGameChecker = (
 		currentPlay
 	);
 
-	// console.log(sRow, sCol, '====');
 	if (sRow.length === 1) {
 		return {
 			x: sRow[0].x,
