@@ -1,5 +1,6 @@
 import { PlayType, Grid, DiagonalGridType, Entry } from '../types';
 
+// Player vs Player Utils section
 const checkGameWinnerInGrid = (
 	currentPlayer: PlayType,
 	gridRow: Array<any>,
@@ -204,7 +205,7 @@ export const checkGameWinnerForPlayers = (
 	};
 };
 
-
+// Computer Vs Player utils section
 const some = (
 	grid: Grid,
 	rowIndex: number,
