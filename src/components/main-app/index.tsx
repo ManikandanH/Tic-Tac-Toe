@@ -133,9 +133,66 @@ export function MainApp(): ReactElement {
 				return cols;
 			})
 		);
+		const isWin = checkIfWin(cloneGrid, { x, y }, currentPlay);
 
-		setGrid(cloneGrid);
-		setCurrentPlay(currentPlay === 'X' ? 'O' : 'X');
+		console.log(cloneGrid, x, y, isWin);
+		if (!isWin) {
+			setGrid(cloneGrid);
+			setCurrentPlay(currentPlay === 'X' ? 'O' : 'X');
+		}
+	};
+
+	const checkIfWin = (
+		cloneGrid: Grid,
+		entryPoints: Entry,
+		currentPlayOptional?: PlayType
+	): boolean => {
+		const { isCol, isRow, isWin, index, isDiagonal, diagonalType } = checkGameWinnerForPlayers(
+			currentPlayOptional || currentPlay,
+			cloneGrid,
+			entryPoints.x,
+			entryPoints.y
+		);
+
+		if (isWin) {
+			if (isDiagonal) {
+				setGrid((prevState) =>
+					prevState.map((rows, i) =>
+						rows.map((cols, j) => {
+							if (diagonalType === 'Main' && i === j) {
+								return currentPlay;
+							}
+							if (diagonalType === 'Secondary' && i + j === grid.length - 1) {
+								return currentPlay;
+							}
+							return false;
+						})
+					)
+				);
+			} else {
+				setGrid((prevState) =>
+					prevState.map((rows, i) =>
+						rows.map((cols, j) => {
+							if (isRow && i === index) {
+								return currentPlay;
+							}
+							if (isCol && j === index) {
+								return currentPlay;
+							}
+							return false;
+						})
+					)
+				);
+			}
+			toast.success(
+				currentPlay === 'X'
+					? `${player1Name} won the match`
+					: `${player2Name} won the match`
+			);
+			setIsGameComplete(true);
+		}
+
+		return isWin;
 	};
 
 	const handleGrid = (entryPoints: Entry): void => {
@@ -150,55 +207,22 @@ export function MainApp(): ReactElement {
 			);
 
 			if (isPlayer) {
-				const { isCol, isRow, isWin, index, isDiagonal, diagonalType } =
-					checkGameWinnerForPlayers(currentPlay, cloneGrid, entryPoints.x, entryPoints.y);
+				const isWin = checkIfWin(cloneGrid, { x: entryPoints.x, y: entryPoints.y });
 
-				if (isWin) {
-					if (isDiagonal) {
-						setGrid((prevState) =>
-							prevState.map((rows, i) =>
-								rows.map((cols, j) => {
-									if (diagonalType === 'Main' && i === j) {
-										return currentPlay;
-									}
-									if (diagonalType === 'Secondary' && i + j === grid.length - 1) {
-										return currentPlay;
-									}
-									return false;
-								})
-							)
-						);
-					} else {
-						setGrid((prevState) =>
-							prevState.map((rows, i) =>
-								rows.map((cols, j) => {
-									if (isRow && i === index) {
-										return currentPlay;
-									}
-									if (isCol && j === index) {
-										return currentPlay;
-									}
-									return false;
-								})
-							)
-						);
-					}
-					toast.success(
-						currentPlay === 'X'
-							? `${player1Name} won the match`
-							: `${player2Name} won the match`
-					);
-					setIsGameComplete(true);
-				} else {
+				if (!isWin) {
 					setGrid(cloneGrid);
 					setCurrentPlay((prevState) => (prevState === 'O' ? 'X' : 'O'));
 				}
 			} else {
-				setGrid(cloneGrid);
-				setCurrentPlay((prevState) => (prevState === 'O' ? 'X' : 'O'));
-				setTimeout(() => {
-					computerIsPlaying(cloneGrid, currentPlay === 'X' ? 'O' : 'X', entryPoints);
-				}, 500);
+				const isWin = checkIfWin(cloneGrid, { x: entryPoints.x, y: entryPoints.y });
+
+				if (!isWin) {
+					setGrid(cloneGrid);
+					setCurrentPlay((prevState) => (prevState === 'O' ? 'X' : 'O'));
+					setTimeout(() => {
+						computerIsPlaying(cloneGrid, currentPlay === 'X' ? 'O' : 'X', entryPoints);
+					}, 500);
+				}
 			}
 			setEntries(entryPoints);
 		}

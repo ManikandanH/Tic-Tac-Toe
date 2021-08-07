@@ -184,6 +184,7 @@ export const checkGameWinnerForPlayers = (
 			diagonalType,
 		}
 	);
+	console.log(currentPlayer, grid, gridRowIndex, gridColIndex,'===')
 	if (isWin) {
 		return {
 			isWin,
